@@ -30,7 +30,7 @@ class Polarimeter:
         lib.TLPAX_findRsrc(self.handle, byref(self.device_count))
         if self.device_count.value < 1:
             print("No PAX1000 device found.")
-            exit()
+            self.exit()
         else:
             print(self.device_count.value, "PAX1000 device(s) found.")
             print("")
@@ -43,7 +43,7 @@ class Polarimeter:
             print("Connection to first PAX1000 initialized.")
         else:
             print("Error with initialization.")
-            exit()
+            self.exit()
         print("")
 
         # Short break to make sure the device is correctly initialized
@@ -61,6 +61,10 @@ class Polarimeter:
         # Close
         lib.TLPAX_close(self.handle)
         print("Connection to PAX1000 closed.")
+
+    def exit(self):
+        self.close()
+        exit()
 
     def print_current_settings(self):
         wavelength = c_double()
