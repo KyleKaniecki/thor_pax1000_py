@@ -120,17 +120,17 @@ class Polarimeter:
 
         return {
             "ts": int(datetime.now(timezone.utc).timestamp()),
-            "azimuth": azimuth.value,
-            "ellipticity": ellipticity.value,
-            "s1": s1.value,
-            "s2": s2.value,
-            "s3": s3.value,
-            "power": power.value,
-            "power_polarized": powerPolarized.value,
-            "power_unpolarized": powerUnpolarized.value,
-            "dop": dop.value,
-            "dolp": dolp.value,
-            "docp": docp.value,
+            "azimuth": float(azimuth.value),
+            "ellipticity": float(ellipticity.value),
+            "s1": float(s1.value),
+            "s2": float(s2.value),
+            "s3": float(s3.value),
+            "power": float(power.value),
+            "power_polarized": float(powerPolarized.value),
+            "power_unpolarized": float(powerUnpolarized.value),
+            "dop": float(dop.value),
+            "dolp": float(dolp.value),
+            "docp": float(docp.value),
         }
 
     def __enter__(self):
