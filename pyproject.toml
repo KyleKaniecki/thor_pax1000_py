@@ -1,0 +1,14 @@
+[project]
+name = "thor-pax1000-py"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Kyle Kaniecki", email = "kanieckikyle@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
