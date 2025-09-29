@@ -22,6 +22,8 @@ class Polarimeter:
         self.wavelength = wavelength
         self.scan_rate = scan_rate
 
+        self.latest_scan_id = 255
+
     def init(self):
         # Detect and initialize PAX1000 device
         IDQuery = True
@@ -58,7 +60,20 @@ class Polarimeter:
         # Short break
         time.sleep(2)
 
+    def read_scans(self):
+        scans = []
+        for i in range(int(self.latest_scan_id), 255, -1):
+            scans = self.read_measurement(i)
+
+    def release_scans(self):
+        # Release this instance's scans
+        for i in range(int(self.lastestScanID), 255, -1):
+            lib.TLPAX_releaseScan(self.handle, c_int(i))
+
+        self.latest_scan_id = 255
+
     def close(self):
+        self.release_scans()
         # Close
         lib.TLPAX_close(self.handle)
         print("Connection to PAX1000 closed.")
@@ -85,24 +100,28 @@ class Polarimeter:
     def take_measurement(self):
         scanID = c_int()
         lib.TLPAX_getLatestScan(self.handle, byref(scanID))
+        self.latest_scan_id = int(scanID.value)
+
+    def read_measurement(self, id) -> dict:
+        scan_id = c_int(id)
 
         azimuth = c_double()
         ellipticity = c_double()
         lib.TLPAX_getPolarization(
-            self.handle, scanID.value, byref(azimuth), byref(ellipticity)
+            self.handle, scan_id, byref(azimuth), byref(ellipticity)
         )
 
         s1 = c_double()
         s2 = c_double()
         s3 = c_double()
-        lib.TLPAX_getStokes(self.handle, scanID.value, byref(s1), byref(s2), byref(s3))
+        lib.TLPAX_getStokes(self.handle, scan_id, byref(s1), byref(s2), byref(s3))
 
         power = c_double()
         powerPolarized = c_double()
         powerUnpolarized = c_double()
         lib.TLPAX_getPower(
             self.handle,
-            scanID.value,
+            scan_id,
             byref(power),
             byref(powerPolarized),
             byref(powerUnpolarized),
@@ -111,12 +130,7 @@ class Polarimeter:
         dop = c_double()
         dolp = c_double()
         docp = c_double()
-        lib.TLPAX_getDOP(
-            self.handle, scanID.value, byref(dop), byref(dolp), byref(docp)
-        )
-
-        # Release this scan
-        lib.TLPAX_releaseScan(self.handle, scanID)
+        lib.TLPAX_getDOP(self.handle, scan_id, byref(dop), byref(dolp), byref(docp))
 
         return {
             "ts": int(datetime.now(timezone.utc).timestamp()),
