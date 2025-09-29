@@ -119,7 +119,7 @@ class Polarimeter:
         lib.TLPAX_releaseScan(self.handle, scanID)
 
         return {
-            "ts": int(datetime.now(timezone.utc)),
+            "ts": int(datetime.now(timezone.utc).timestamp()),
             "azimuth": azimuth.value,
             "ellipticity": ellipticity.value,
             "s1": s1.value,
