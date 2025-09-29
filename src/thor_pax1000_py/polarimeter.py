@@ -69,7 +69,7 @@ class Polarimeter:
 
     def release_scans(self):
         # Release this instance's scans
-        for i in range(int(self.lastestScanID), 255, -1):
+        for i in range(int(self.latest_scan_id), 255, -1):
             lib.TLPAX_releaseScan(self.handle, c_int(i))
 
         self.latest_scan_id = 255
