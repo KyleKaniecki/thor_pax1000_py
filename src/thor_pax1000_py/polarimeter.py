@@ -1,6 +1,7 @@
 import time
 import ctypes
 from ctypes import *
+from datetime import datetime, timezone
 
 # Load DLL library
 lib = cdll.LoadLibrary(
@@ -118,6 +119,7 @@ class Polarimeter:
         lib.TLPAX_releaseScan(self.handle, scanID)
 
         return {
+            "ts": int(datetime.now(timezone.utc)),
             "azimuth": azimuth.value,
             "ellipticity": ellipticity.value,
             "s1": s1.value,
