@@ -60,10 +60,12 @@ class Polarimeter:
         # Short break
         time.sleep(2)
 
-    def read_scans(self):
+    def read_scans(self) -> list[dict]:
         scans = []
         for i in range(int(self.latest_scan_id), 255, -1):
-            scans = self.read_measurement(i)
+            scans.append(self.read_measurement(i))
+
+        return scans
 
     def release_scans(self):
         # Release this instance's scans
