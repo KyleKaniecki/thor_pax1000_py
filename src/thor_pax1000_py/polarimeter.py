@@ -10,10 +10,16 @@ lib = cdll.LoadLibrary(
 
 class Polarimeter:
 
-    def __init__(self):
+    def __init__(
+        self, measurement_mode: int = 9, wavelength: float = 785e-9, scan_rate: int = 60
+    ):
         self.handle = c_ulong()
         self.resource = c_char_p(b"")
         self.device_count = c_int()
+
+        self.measurement_mode = measurement_mode
+        self.wavelength = wavelength
+        self.scan_rate = scan_rate
 
     def init(self):
         # Detect and initialize PAX1000 device
@@ -44,36 +50,37 @@ class Polarimeter:
         time.sleep(2)
 
         # Make settings
-        lib.TLPAX_setMeasurementMode(self.handle, 9)
-        lib.TLPAX_setWavelength(self.handle, c_double(785e-9))
-        lib.TLPAX_setBasicScanRate(self.handle, c_double(60))
-
-        # Check settings
-        wavelength = c_double()
-        lib.TLPAX_getWavelength(self.handle, byref(wavelength))
-        print("Set wavelength [nm]: ", wavelength.value * 1e9)
-        mode = c_int()
-        lib.TLPAX_getMeasurementMode(self.handle, byref(mode))
-        print("Set mode: ", mode.value)
-        scanrate = c_double()
-        lib.TLPAX_getBasicScanRate(self.handle, byref(scanrate))
-        print("Set scanrate: ", scanrate.value)
-        print("")
+        lib.TLPAX_setMeasurementMode(self.handle, self.measurement_mode)
+        lib.TLPAX_setWavelength(self.handle, c_double(self.wavelength))
+        lib.TLPAX_setBasicScanRate(self.handle, c_double(self.scan_rate))
 
         # Short break
-        time.sleep(5)
+        time.sleep(2)
 
     def close(self):
         # Close
         lib.TLPAX_close(self.handle)
         print("Connection to PAX1000 closed.")
 
+    def print_current_settings(self):
+        wavelength = c_double()
+        lib.TLPAX_getWavelength(self.handle, byref(wavelength))
+        print("Set wavelength [nm]: ", wavelength.value * 1e9)
+
+        mode = c_int()
+        lib.TLPAX_getMeasurementMode(self.handle, byref(mode))
+        print("Set mode: ", mode.value)
+
+        scanrate = c_double()
+        lib.TLPAX_getBasicScanRate(self.handle, byref(scanrate))
+        print("Set scanrate: ", scanrate.value)
+
+        print("")
+
     def take_measurement(self):
-        revolutionCounter = c_int()
         scanID = c_int()
         lib.TLPAX_getLatestScan(self.handle, byref(scanID))
 
-        print("Measurement", (x + 1))
         azimuth = c_double()
         ellipticity = c_double()
         lib.TLPAX_getPolarization(
@@ -103,22 +110,28 @@ class Polarimeter:
             self.handle, scanID.value, byref(dop), byref(dolp), byref(docp)
         )
 
-        print("Azimuth [rad]: ", azimuth.value)
-        print("Ellipticity [rad]: ", ellipticity.value)
-
-        print("S1: ", s1.value)
-        print("S2: ", s2.value)
-        print("S3: ", s3.value)
-
-        print("Power: ", power.value)
-        print("Power [Polarized]: ", powerPolarized.value)
-        print("Power [!Polarized]: ", powerUnpolarized.value)
-
-        print("DOP: ", dop.value)
-        print("DOLP: ", dolp.value)
-        print("DOCP: ", docp.value)
-
-        print()
-
+        # Release this scan
         lib.TLPAX_releaseScan(self.handle, scanID)
-        time.sleep(3)
+
+        return {
+            "azimuth": azimuth.value,
+            "ellipticity": ellipticity.value,
+            "s1": s1.value,
+            "s2": s2.value,
+            "s3": s3.value,
+            "power": {
+                "raw": power.value,
+                "polarized": powerPolarized.value,
+                "unpolarized": powerUnpolarized.value,
+            },
+            "dop": dop.value,
+            "dolp": dolp.value,
+            "docp": docp.value,
+        }
+
+    def __enter__(self):
+        self.init()
+        return self
+
+    def __exit__(self):
+        self.close()
