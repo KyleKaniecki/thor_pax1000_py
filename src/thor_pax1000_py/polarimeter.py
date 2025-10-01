@@ -118,6 +118,17 @@ class Polarimeter:
         s3 = c_double()
         lib.TLPAX_getStokes(self.handle, scan_id, byref(s1), byref(s2), byref(s3))
 
+        s1_normalized = c_double()
+        s2_normalized = c_double()
+        s3_normalized = c_double()
+        lib.TLPAX_getStokesNormalized(
+            self.handle,
+            scan_id,
+            byref(s1_normalized),
+            byref(s2_normalized),
+            byref(s3_normalized),
+        )
+
         power = c_double()
         powerPolarized = c_double()
         powerUnpolarized = c_double()
@@ -141,6 +152,9 @@ class Polarimeter:
             "s1": float(s1.value),
             "s2": float(s2.value),
             "s3": float(s3.value),
+            "s1_norm": float(s1_normalized.value),
+            "s2_norm": float(s2_normalized.value),
+            "s3_norm": float(s3_normalized.value),
             "power": float(power.value),
             "power_polarized": float(powerPolarized.value),
             "power_unpolarized": float(powerUnpolarized.value),
